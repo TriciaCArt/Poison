@@ -1,0 +1,117 @@
+﻿@model Poison.Models.Company
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<div id="content" class="main-content">
+    <div class="layout-px-spacing">
+        <div class="middle-content container-xxl p-0">
+            <div class="row layout-top-spacing">
+
+                <div class="col-6">
+                    <h1></h1>
+
+                    <div class="card bg-secondary">
+                        <div class="card-body">
+                            <h5 class="card-title">@Html.DisplayFor(model=>model.Name)</h5>
+                            <p class="mb-0">@Html.DisplayFor(model=>model.Description)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6">
+                    <div class="card style-3">
+                        <img src="~/img/grid-blog-style-2.jpeg" class="card-img-top" alt="...">
+                        <div class="card-body px-0 py-0 align-self-center">
+                            <p class="card-category mb-1">@User.Identity.Name</p>
+
+                            <h5 class="card-title mb-3">
+                                I'm not sure what should go here, maybe profile information?
+                                <p>
+                                    <a asp-action="Create">Create New</a>
+                                    <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> |
+                                    <a asp-action="Delete" asp-route-id="@Model.Id">Delete</a>
+                                </p>
+                            </h5>
+                            <div class="media mt-4 mb-0 pt-1">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+            <div class="row">
+                <ul class="nav nav-tabs  mb-3 mt-3" id="simpletab" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="members-tab" data-bs-toggle="tab" href="#members" role="tab" aria-controls="Members" aria-selected="true">Members</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" id="projects-tab" data-bs-toggle="tab" href="#projects" role="tab" aria-controls="Projects" aria-selected="false">Projects</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" id="invites-tab" data-bs-toggle="tab" href="#invites" role="tab" aria-controls="Invites" aria-selected="false">Invites</a>
+                    </li>
+
+                </ul>
+                <div class="tab-content" id="simpletabContent">
+                    <div class="tab-pane fade show active" id="Members" role="tabpanel" aria-labelledby="members-tab">
+                        @*I want to loop through a list of members of the Company*@
+
+                        <ul class="list-group ">
+                            @foreach (var member in Model.Members)
+                            {
+                                <li class="list-group-item">@member.FullName</li>
+
+                            }
+                        </ul>
+                    </div>
+
+
+                    <div class="tab-pane fade" id="projects" role="tabpanel" aria-labelledby="projects-tab">
+                        <div class="media">
+                            @*If the project has an image, it can go here. *@
+
+                            <img class="me-3" src="../src/assets/img/profile-32.jpeg" alt="Generic placeholder image">
+
+                            <div class="media-body">
+                                @*I want to loop through a list of projects specific to the company*@
+                                <ol>
+                                    @foreach (var project in Model.Projects)
+                                    {
+                                        <li class="list-grop-item">@project.Name</li>
+                                    }
+
+                                </ol>
+
+
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="invites" role="tabpanel" aria-labelledby="invites-tab">
+                        <p class="">
+                            @*This is where I will have my invites*@
+                            <ul>
+                                @foreach (var invite in Model.Invites)
+                                {
+                                    <li class="list-group-item">@invite.Id</li>
+                                }
+
+
+                            </ul>
+
+
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
