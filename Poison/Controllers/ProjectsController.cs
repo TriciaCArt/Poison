@@ -21,14 +21,16 @@ namespace Poison.Controllers
         private readonly IPoisonProjectService _projectService;
         private readonly IPoisonRolesService _rolesService;
         private readonly IPoisonFileService _fileService;
+        private readonly IPoisonLookupService _lookupService;
 
-        public ProjectsController(ApplicationDbContext context, UserManager<BTUser> userManager, IPoisonProjectService projectService, IPoisonRolesService rolesService, IPoisonFileService fileService)
+        public ProjectsController(ApplicationDbContext context, UserManager<BTUser> userManager, IPoisonProjectService projectService, IPoisonRolesService rolesService, IPoisonFileService fileService, IPoisonLookupService lookupService)
         {
             _context = context;
             _userManager = userManager;
             _projectService = projectService;
             _rolesService = rolesService;
             _fileService = fileService;
+            _lookupService = lookupService;
         }
 
         // GET: Projects
@@ -190,8 +192,8 @@ namespace Poison.Controllers
             AddProjectWithPMViewModel model = new();
 
             int companyId = User.Identity!.GetCompanyId();
-            model.PMList = new SelectList(await _rolesService.GetUsersInRoleAsync(nameof(PoisonRoles.ProjectManager), companyId), "Id", "FullName");
-            model.PriorityList = new SelectList(_context.ProjectPriorities, "Id", "Name");
+            model.PMList = new SelectList(await _rolesService.GetUsersInRoleAsync(PoisonRoles.ProjectManager.ToString(), companyId), "Id", "FullName");
+            model.PriorityList = new SelectList(await _lookupService.GetProjectPrioritiesAsync(), "Id", "Name");
 
             return View(model);
         }
@@ -226,7 +228,7 @@ namespace Poison.Controllers
                     await _projectService.AddProjectManagerAsync(model.PMID, model.Project.Id);
                 }
 
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(AllProjects));
             }
 
             int companyId = User.Identity!.GetCompanyId();

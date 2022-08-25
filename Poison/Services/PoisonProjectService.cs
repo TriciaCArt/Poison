@@ -16,6 +16,7 @@ namespace Poison.Services.Interfaces
             _poisonRoleService = poisonRoleService;
         }
 
+        //CRUD Create
         public async Task AddNewProjectAsync(Project project)
         {
             try
@@ -43,10 +44,11 @@ namespace Poison.Services.Interfaces
                     await RemoveProjectManagerAsync(projectId);
 
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
 
-                    throw;
+                    Console.WriteLine($"Error removing current PM. - Error: {ex.Message}");
+                    return false;
                 }               
             }
 
@@ -99,6 +101,7 @@ namespace Poison.Services.Interfaces
 
         }
 
+        //CRUD Archive (Delete)
         #region Archive Project Async
         public async Task ArchiveProjectAsync(Project project)
         {
@@ -121,6 +124,8 @@ namespace Poison.Services.Interfaces
             }
         }
 
+        #endregion
+
         public async Task<List<BTUser>> GetAllProjectMembersExceptPMAsync(int projectId)
         {
             try
@@ -139,10 +144,10 @@ namespace Poison.Services.Interfaces
                 throw;
             }
         }
-        #endregion
+        
 
 
-        #region Get All Projects By Company Id
+        
         public async Task<List<Project>> GetAllProjectsByCompanyIdAsync(int companyId)
         {
             try
@@ -177,7 +182,7 @@ namespace Poison.Services.Interfaces
 
                 throw;
             }
-            #endregion
+           
 
             //var applicationDbContext = _context.Projects.Include(p => p.Company).Include(p => p.Priority).Where(p => p.CompanyId == companyId);
             //return await applicationDbContext.ToListAsync();
@@ -189,7 +194,7 @@ namespace Poison.Services.Interfaces
             try
             {
                 projects = await _context.Projects.Where(p=>p.CompanyId == companyId)
-                    .Include(p => p.ProjectPriority).ToListAsync();
+                                                  .Include(p => p.ProjectPriority).ToListAsync();
 
                 return projects;
             }
@@ -209,6 +214,7 @@ namespace Poison.Services.Interfaces
             return archivedprojects;
         }
 
+        //CRUD - Read
         public async Task<Project> GetProjectByIdAsync(int projectId, int companyId)
         {
             try
@@ -269,7 +275,7 @@ namespace Poison.Services.Interfaces
             {
                 Project? project = await _context.Projects.Include(p => p.Members).FirstOrDefaultAsync(p => p.Id == projectId);
                 List<BTUser> members = new();
-                foreach(BTUser user in project!.Members)
+                foreach(BTUser user in project.Members!)
                 {
                     if (await _poisonRoleService.IsUserInRoleAsync(user, roleName))
                     {
@@ -309,7 +315,7 @@ namespace Poison.Services.Interfaces
             return result;
         }
 
-        public async Task<List<Project>> GetUserProjectsAsync(string userId)
+        public async Task<List<Project>> GetUserProjectsAsync(string? userId)
         {
             try
             {
@@ -317,7 +323,7 @@ namespace Poison.Services.Interfaces
                                                                 .Include(u => u.Projects)!
                                                                     .ThenInclude(p=>p.Company)
                                                                 .Include(u=>u.Projects)!
-                                                                    .ThenInclude(p=>p.Members)
+                                                                    .ThenInclude(p=>p.Members)!
                                                                 .Include(u => u.Projects)!
                                                                     .ThenInclude(p => p.Tickets)
                                                                 .Include(u => u.Projects)!
@@ -335,8 +341,8 @@ namespace Poison.Services.Interfaces
                                                                 .Include(u=>u.Projects)!
                                                                     .ThenInclude(t=>t.Tickets)
                                                                         .ThenInclude(t=>t.TicketType)
-                                                               .FirstOrDefaultAsync(u => u.Id == userId))?.Projects!.ToList();
-                return projects!;
+                                                               .FirstOrDefaultAsync(u => u.Id! == userId)).Projects!.ToList();
+                return projects;
             }
             catch (Exception)
             {
@@ -387,7 +393,7 @@ namespace Poison.Services.Interfaces
                 Project? project = await _context.Projects.Include(m => m.Members).FirstOrDefaultAsync(p => p.Id == projectId);
                 foreach (BTUser member in project?.Members!)
                 {
-                    if(await _poisonRoleService.IsUserInRoleAsync(member, nameof(PoisonRoles.ProjectManager)))
+                    if(await _poisonRoleService.IsUserInRoleAsync(member, nameof(PoisonRoles.ProjectManager).ToString()))
                     {
                         await RemoveUserFromProjectAsync(member.Id, projectId); 
                     }
@@ -452,6 +458,7 @@ namespace Poison.Services.Interfaces
             }
         }
 
+        //CRUD Edit Project
         #region Update Project Async
         public async Task UpdateProjectAsync(Project project)
         {

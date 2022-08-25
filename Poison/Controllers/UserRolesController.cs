@@ -49,13 +49,13 @@ namespace Poison.Controllers
 
             BTUser? user = (await _companyInfoService.GetAllMembersAsync(companyId)).FirstOrDefault(c => c.Id == member.BTUser!.Id);
 
-            IEnumerable<string> currentRoles = await _poisonRoles.GetUserRolesAsync(user);
+            IEnumerable<string> currentRoles = await _poisonRoles.GetUserRolesAsync(user!);
 
             string? selectedUserRole = member.SelectedRoles!.FirstOrDefault();
 
             if (!string.IsNullOrEmpty(selectedUserRole))
             {
-                if (await _poisonRoles.RemoveUserFromRolesAsync(user, currentRoles))
+                if (await _poisonRoles.RemoveUserFromRolesAsync(user!, currentRoles))
                 {
                     await _poisonRoles.AddUserToRoleAsync(user!, selectedUserRole);
                 }

@@ -68,8 +68,8 @@ namespace Poison.Controllers
             {
                 AmItem item = new();
 
-                item.Project = project.Name;
-                item.Tickets = project.Tickets.Count;
+                item.Project = project.Name!;
+                item.Tickets = project.Tickets!.Count;
                 item.Developers = (await _projectService.GetProjectMemberByRoleAsync(project.Id, nameof(PoisonRoles.Developer))).Count();
 
                 amItems.Add(item);
@@ -84,7 +84,7 @@ namespace Poison.Controllers
         [HttpPost]
         public async Task<JsonResult> GglProjectTickets()
         {
-            int companyId = User.Identity.GetCompanyId();
+            int companyId = User.Identity!.GetCompanyId();
 
             List<Project> projects = await _projectService.GetAllProjectsByCompanyIdAsync(companyId);
 
@@ -93,7 +93,7 @@ namespace Poison.Controllers
 
             foreach (Project prj in projects)
             {
-                chartData.Add(new object[] { prj.Name, prj.Tickets.Count() });
+                chartData.Add(new object[] { prj.Name!, prj.Tickets!.Count() });
             }
 
             return Json(chartData);

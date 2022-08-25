@@ -23,7 +23,9 @@ namespace Poison.Services
             {
                 List<BTUser>? members = new();
 
-                members = (await _context.Companies.Include(c=>c.Members).FirstOrDefaultAsync(c=>c.Id == companyId))!.Members.ToList();
+                members = await _context.Users.Where(u=>u.CompanyId == companyId).ToListAsync();
+
+                //members = (await _context.Companies.Include(c=>c.Members).FirstOrDefaultAsync(c=>c.Id == companyId))!.Members.ToList();
 
                 return members;
             }
@@ -79,7 +81,11 @@ namespace Poison.Services
 
                 if(companyId != null)
                 {
-                    company = await _context.Companies.Include(c => c.Members).Include(c => c.Projects).Include(c => c.Invites).FirstOrDefaultAsync(c => c.Id == companyId);
+                    company = await _context.Companies
+                                            .Include(c => c.Members)
+                                            .Include(c => c.Projects)
+                                            .Include(c => c.Invites)
+                                            .FirstOrDefaultAsync(c => c.Id == companyId);
 
                 }
                 return company!;

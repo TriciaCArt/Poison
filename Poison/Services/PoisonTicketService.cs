@@ -57,7 +57,7 @@ namespace Poison.Services
 
             tickets = await _context.Projects
                                         .Where(p => p.CompanyId == companyId)
-                                        .SelectMany(p => p.Tickets)
+                                        .SelectMany(p => p.Tickets!)
                                             .Include(p => p.Attachments)
                                             .Include(p => p.Comments)
                                             .Include(p => p.DeveloperUser)
@@ -70,7 +70,7 @@ namespace Poison.Services
                                             .Where(p => p.Archived == false)
                                         .ToListAsync();
 
-            //var applicationDbContext = _context.Tickets
+            //var companyTickets = _context.Tickets
             //                                   .Include(t => t.DeveloperUser)
             //                                   .Include(t => t.Project)
             //                                   .Include(t => t.SubmitterUser)
@@ -78,7 +78,7 @@ namespace Poison.Services
             //                                   .Include(t => t.TicketStatus)
             //                                   .Include(t => t.TicketType)
             //                                   .Where(t => t.ProjectId == companyId);
-            //return await applicationDbContext.ToListAsync();
+            //return await companyTickets.ToListAsync();
 
             return tickets;
         }
@@ -91,7 +91,7 @@ namespace Poison.Services
 
                 tickets = await _context.Projects
                                             .Where(p => p.CompanyId == companyId)
-                                            .SelectMany(p => p.Tickets)
+                                            .SelectMany(p => p.Tickets!)
                                                 .Include(p => p.Attachments)
                                                 .Include(p => p.Comments)
                                                 .Include(p => p.DeveloperUser)
@@ -114,7 +114,7 @@ namespace Poison.Services
 
         }
 
-        public async Task<Ticket> GetTicketAsNoTrackingAsync(int ticketId)
+        public async Task<Ticket?> GetTicketAsNoTrackingAsync(int ticketId)
         {
             try
             {
@@ -203,7 +203,7 @@ namespace Poison.Services
                 }
                 else if (await _poisonRolesService.IsUserInRoleAsync(btUser!, nameof(PoisonRoles.Submitter)))
                 {
-                    tickets = (await _projectService.GetAllProjectsByCompanyIdAsync(compId)).SelectMany(p => p.Tickets)
+                    tickets = (await _projectService.GetAllProjectsByCompanyIdAsync(compId)).SelectMany(p => p.Tickets!)
                                                     .Where(t => t.SubmitterUserId == userId).ToList();
                 }
                 else if (await _poisonRolesService.IsUserInRoleAsync(btUser!, nameof(PoisonRoles.ProjectManager)))
@@ -273,10 +273,10 @@ namespace Poison.Services
         {
             try
             {
-                TicketAttachment ticketAttachment = await _context.TicketAttachments
+                TicketAttachment? ticketAttachment = await _context.TicketAttachments
                                                                   .Include(t => t.User)
                                                                   .FirstOrDefaultAsync(t => t.Id == ticketAttachmentId);
-                return ticketAttachment;
+                return ticketAttachment!;
             }
             catch (Exception)
             {

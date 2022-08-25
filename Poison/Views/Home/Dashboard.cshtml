@@ -38,7 +38,7 @@
 </span>
 
 
-<div>
+
     <div classxfont-weighteighteightgetainer-fluid">
 
         <!-- Info Pills -->
@@ -48,7 +48,7 @@
                     <div class="card text-center bg-info">
                         <div class="body">
                             <div class="p-15 text-light">
-                                <h3>@Model.Projects.Where(p => p.StartDate < DateTime.Now && p.EndDate > DateTime.Now).Count()</h3>
+                                <h3>@Model.Projects!.Where(p => p.StartDate < DateTime.Now && p.EndDate > DateTime.Now).Count()</h3>
                                 <span>Active Projects</span>
                             </div>
                         </div>
@@ -61,7 +61,7 @@
                         <div class="body">
                             <div class="p-15 text-light">
 
-                                <h3>@Model.Tickets.Count()</h3>
+                                <h3>@Model.Tickets!.Count()</h3>
                                 <span>Total Tickets</span>
                             </div>
                         </div>
@@ -72,7 +72,7 @@
                 <div class="card text-center bg-warning">
                     <div class="body">
                         <div class="p-15 text-light">
-                            <h3>@Model.Tickets.Where(t => string.IsNullOrEmpty(t.DeveloperUserId)).Count()</h3>
+                            <h3>@Model.Tickets!.Where(t => string.IsNullOrEmpty(t.DeveloperUserId)).Count()</h3>
                             <span>Unassigned Tickets</span>
                         </div>
                     </div>
@@ -84,9 +84,9 @@
                         <div class="p-15 text-light">
                             <h3>
                                 @(
-                                Model.Projects.Count()
-                                + Model.Tickets.Count()
-                                + Model.Members.Count()
+                                Model.Projects!.Count()
+                                + Model.Tickets!.Count()
+                                + Model.Members!.Count()
                                 )
                             </h3>
                             <span>Total Data</span>
@@ -172,7 +172,7 @@
                                     </thead>
                                     <tbody>
                                         @* Table body *@
-                                        @foreach (var ticket in Model.Tickets.OrderByDescending(d => d.Created))
+                                        @foreach (var ticket in Model.Tickets!.OrderByDescending(d => d.Created))
                                         {
                                             <tr>
                                                 <td><a asp-action="Details" asp-controller="Tickets" asp-route-id="@ticket.Id" style="color:black"><strong>@ticket.Title</strong></a> </td>
@@ -218,11 +218,59 @@
                     <div class="bg-secondary">
                         <div class="card m-1 p-2">
                             <div class="card-header">
-                                <h2>Tickets</h2>
+                                <h2>Unassigned Tickets</h2>
                             </div>
                             <div class="card-body">
 
                                 @* Copy and format table from Unassigned Tickets *@
+                                <table class="table table-hover">
+                                    <thead class="">
+                                        <tr>
+                                            @* Table header *@
+                                            <th>Title</th>
+                                            <th>Developer</th>
+                                            <th>Status</th>
+                                            <th>Priority</th>
+                                            <th>Date</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @* Table body *@
+                                        @foreach (var ticket in Model.Tickets!.OrderByDescending(d => d.Created))
+                                        {
+                                            <tr>
+                                                <td><a asp-action="Details" asp-controller="Tickets" asp-route-id="@ticket.Id" style="color:black"><strong>@ticket.Title</strong></a> </td>
+                                                <td>
+                                                    @if (ticket.DeveloperUserId != null)
+                                                    {
+                                                        @ticket.DeveloperUser?.FullName
+                                                    }
+                                                    else
+                                                    {
+                                                        if (User.IsInRole(nameof(PoisonRoles.Admin)) || User.IsInRole(nameof(PoisonRoles.ProjectManager)))
+                                                        {
+                                                            <a class="btn btn-xs btn-info" asp-action="AssignDeveloper" asp-controller="Tickets" asp-route-id="@ticket.Id">Assign Dev</a>
+                                                        }
+                                                    }
+                                                </td>
+                                                @if (ticket.TicketStatus!.Name == "New")
+                                                {
+                                                    <td><span class="badge-success">@ticket.TicketStatus.Name </span></td>
+                                                }
+                                                else
+                                                {
+                                                    <td><span class="badge-primary">@ticket.TicketStatus.Name </span></td>
+                                                }
+                                                <td><span class="badg">@ticket.TicketPriority!.Name </span></td>
+                                                <td>@ticket.Created.ToString("MM-dd-yyyy")</td>
+                                                <td>
+                                                    <a class="btn btn-sm btn-outline-info" asp-action="Details" asp-controller="Tickets" asp-route-id="@ticket.Id"><i class="fs-5 bi-justify"></i></a>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
                             </div>
                             <div class="card-footer">
                             </div>
@@ -238,7 +286,11 @@
                             </div>
                             <div class="card-body" style="overflow-y:auto;height:600px;background-color:antiquewhite">
                                 @* Looop over Company members. Display Name and Role *@
-                            </div>
+                            @foreach(var member in Model.Company!.Members)
+                            {
+                                
+                            }
+                        </div>
                         </div>
                     </div>
                 </div>
@@ -246,205 +298,204 @@
         </div>
     </div>
     @section Scripts {
-        
-            <script src="https://code.jquery.com/jquery-3.6.0.js"
-                integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk="
-                crossorigin="anonymous"></script>
-            <!--Google Charts-->
-            <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 
-            <script type="text/javascript">
-                google.load("visualization", "1", { packages: ["corechart"] });
-                google.setOnLoadCallback(drawChart);
-                function drawChart() {
-                    $.ajax({
-                        type: "POST",
-                        url: "/Home/GglProjectPriority",
-                        data: '{}',
-                        contentType: "application/json; charset=utf-8",
-                        dataType: "json",
-                        success: function(result) {
-                            var data = google.visualization.arrayToDataTable(result);
+        <script src="https://code.jquery.com/jquery-3.6.0.js"
+            integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk="
+            crossorigin="anonymous"></script>
+        <!--Google Charts-->
+        <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 
-                            //3D Pie
-                            var options = {
-                                title: 'Project Priority',
-                                is3D: true,
-                                chartArea: { left: 0, bottom: 15, width: '100%', height: '100%' },
-                                legend: { position: 'bottom' }
-
-                            };
-
-                            var chart = new google.visualization.PieChart($("#chart3D")[0]);
-                            chart.draw(data, options);
-                        },
-                        failure: function(rresult) {
-                            alert(result.d);
-                        },
-                        error: function(result) {
-                            alert(result.d);
-                        }
-                    });
-                }
-            </script>
-            <script type="text/javascript">
-                google.load("visualization", "1", { packages: ["corechart"] });
-                google.setOnLoadCallback(drawChart);
-                function drawChart() {
-                    $.ajax({
-                        type: "POST",
-                        url: "/Home/GglProjectPriority",
-                        data: '{}',
-                        contentType: "application/json; charset=utf-8",
-                        dataType: "json",
-                        success: function(result) {
-                            var data = google.visualization.arrayToDataTable(result);
-
-                            //Donut
-                            var options = {
-                                title: 'Company Ticket Distribution',
-                                pieHole: 0.3,
-                                chartArea: { left: 0, bottom: 15, width: '100%', height: '100%' },
-                                legend: { position: 'bottom' }
-                            };
-                            var chart = new google.visualization.PieChart($("#donut")[0]);
-                            chart.draw(data, options);
-                        },
-                        failure: function(rresult) {
-                            alert(result.d);
-                        },
-                        error: function(result) {
-                            alert(result.d);
-                        }
-                    });
-                }
-            </script>
-
-            <!-- *** Begin AM Charts *** -->
-            <!-- Resources -->
-            <script src="https://cdn.amcharts.com/lib/4/core.js"></script>
-            <script src="https://cdn.amcharts.com/lib/4/charts.js"></script>
-
-            <!-- Chart code -->
-            <script>
+        <script type="text/javascript">
+            google.load("visualization", "1", { packages: ["corechart"] });
+            google.setOnLoadCallback(drawChart);
+            function drawChart() {
                 $.ajax({
                     type: "POST",
-                    url: "/Home/AmCharts",
+                    url: "/Home/GglProjectPriority",
                     data: '{}',
                     contentType: "application/json; charset=utf-8",
                     dataType: "json",
                     success: function(result) {
-                        am4core.ready(function() {
+                        var data = google.visualization.arrayToDataTable(result);
 
-                            // Themes begin
-                            // Themes end
+                        //3D Pie
+                        var options = {
+                            title: 'Project Priority',
+                            is3D: true,
+                            chartArea: { left: 0, bottom: 15, width: '100%', height: '100%' },
+                            legend: { position: 'bottom' }
 
-                            // Create chart instance
-                            var chart = am4core.create("chartdiv", am4charts.XYChart);
+                        };
 
-
-                            // Add data
-                            chart.data = result;
-
-                            // Create axes
-                            var categoryAxis = chart.yAxes.push(new am4charts.CategoryAxis());
-                            categoryAxis.dataFields.category = "project";
-                            categoryAxis.numberFormatter.numberFormat = "#";
-                            categoryAxis.renderer.inversed = true;
-                            categoryAxis.renderer.grid.template.location = 0;
-                            categoryAxis.renderer.cellStartLocation = 0.1;
-                            categoryAxis.renderer.cellEndLocation = 0.9;
-
-                            var valueAxis = chart.xAxes.push(new am4charts.ValueAxis());
-                            valueAxis.renderer.opposite = true;
-
-                            // Create series
-                            function createSeries(field, name) {
-                                var series = chart.series.push(new am4charts.ColumnSeries());
-                                series.dataFields.valueX = field;
-                                series.dataFields.categoryY = "project";
-                                series.name = name;
-                                series.columns.template.tooltipText = "{name}: [bold]{valueX}[/]";
-                                series.columns.template.height = am4core.percent(100);
-                                series.sequencedInterpolation = true;
-
-                                var valueLabel = series.bullets.push(new am4charts.LabelBullet());
-                                valueLabel.label.text = "{valueX}";
-                                valueLabel.label.horizontalCenter = "left";
-                                valueLabel.label.dx = 10;
-                                valueLabel.label.hideOversized = false;
-                                valueLabel.label.truncate = false;
-
-                                var categoryLabel = series.bullets.push(new am4charts.LabelBullet());
-                                categoryLabel.label.text = "{name}";
-                                categoryLabel.label.horizontalCenter = "right";
-                                categoryLabel.label.dx = -10;
-                                categoryLabel.label.fill = am4core.color("#fff");
-                                categoryLabel.label.hideOversized = false;
-                                categoryLabel.label.truncate = false;
-                            }
-
-                            createSeries("tickets", "Tickets");
-                            createSeries("developers", "Devs");
-
-                        }); // end am4core.ready()
-
-
+                        var chart = new google.visualization.PieChart($("#chart3D")[0]);
+                        chart.draw(data, options);
                     },
-                    failure: function(result) {
+                    failure: function(rresult) {
                         alert(result.d);
                     },
                     error: function(result) {
                         alert(result.d);
                     }
                 });
-            </script>
+            }
+        </script>
+        <script type="text/javascript">
+            google.load("visualization", "1", { packages: ["corechart"] });
+            google.setOnLoadCallback(drawChart);
+            function drawChart() {
+                $.ajax({
+                    type: "POST",
+                    url: "/Home/GglProjectPriority",
+                    data: '{}',
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function(result) {
+                        var data = google.visualization.arrayToDataTable(result);
 
-            <!-- *** End AM Charts *** -->
+                        //Donut
+                        var options = {
+                            title: 'Company Ticket Distribution',
+                            pieHole: 0.3,
+                            chartArea: { left: 0, bottom: 15, width: '100%', height: '100%' },
+                            legend: { position: 'bottom' }
+                        };
+                        var chart = new google.visualization.PieChart($("#donut")[0]);
+                        chart.draw(data, options);
+                    },
+                    failure: function(rresult) {
+                        alert(result.d);
+                    },
+                    error: function(result) {
+                        alert(result.d);
+                    }
+                });
+            }
+        </script>
 
-            @* Morris Donut Chart *@
-            <script src="//cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"></script>
-            <script src="//cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.min.js"></script>
-            <script>
+        <!-- *** Begin AM Charts *** -->
+        <!-- Resources -->
+        <script src="https://cdn.amcharts.com/lib/4/core.js"></script>
+        <script src="https://cdn.amcharts.com/lib/4/charts.js"></script>
 
-                var morrisDonutData = [{
-                    label: "Low",
-                    value: @Model.Tickets.Where(t=>t.TicketPriority.Name == nameof(PoisonTicketPriorities.Low)).Count()
-                                                                                            }, {
-                    label: "Medium",
-                    value: @Model.Tickets.Where(t=>t.TicketPriority.Name == nameof(PoisonTicketPriorities.Medium)).Count()
-                                                                                            }, {
-                    label: "High",
-                    value: @Model.Tickets.Where(t=>t.TicketPriority.Name == nameof(PoisonTicketPriorities.High)).Count()
-                                                                                            }, {
-                    label: "Urgent",
-                    value: @Model.Tickets.Where(t=>t.TicketPriority.Name == nameof(PoisonTicketPriorities.Urgent)).Count()
-                                                                                            }];
+        <!-- Chart code -->
+        <script>
+            $.ajax({
+                type: "POST",
+                url: "/Home/AmCharts",
+                data: '{}',
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function(result) {
+                    am4core.ready(function() {
+
+                        // Themes begin
+                        // Themes end
+
+                        // Create chart instance
+                        var chart = am4core.create("chartdiv", am4charts.XYChart);
 
 
-                /*
-                Morris: Donut
-                */
-                if ($('#morrisTicketPriority').get(0)) {
-                    var donutChart = Morris.Donut({
-                        resize: true,
-                        element: 'morrisTicketPriority',
-                        data: morrisDonutData,
-                        colors: ['#0088cc', '#734ba9', '#E36159', '#ff993b']
-                    });
+                        // Add data
+                        chart.data = result;
 
-                    donutChart.options.data.forEach(function(label, i) {
-                        var legendItem = $('<span></span>').text(label['label'] + ": " + label['value']).prepend('<span>&nbsp;</span>');
-                        legendItem.find('span')
-                            .css('backgroundColor', donutChart.options.colors[i])
-                            .css('width', '20px')
-                            .css('display', 'inline-block')
-                            .css('margin', '10px');
-                        $('#legend').append(legendItem)
-                    });
-                };
-            </script>
+                        // Create axes
+                        var categoryAxis = chart.yAxes.push(new am4charts.CategoryAxis());
+                        categoryAxis.dataFields.category = "project";
+                        categoryAxis.numberFormatter.numberFormat = "#";
+                        categoryAxis.renderer.inversed = true;
+                        categoryAxis.renderer.grid.template.location = 0;
+                        categoryAxis.renderer.cellStartLocation = 0.1;
+                        categoryAxis.renderer.cellEndLocation = 0.9;
 
-            //await Html.RenderPartialAsync("_ValidationScriptsPartial");
-        
+                        var valueAxis = chart.xAxes.push(new am4charts.ValueAxis());
+                        valueAxis.renderer.opposite = true;
+
+                        // Create series
+                        function createSeries(field, name) {
+                            var series = chart.series.push(new am4charts.ColumnSeries());
+                            series.dataFields.valueX = field;
+                            series.dataFields.categoryY = "project";
+                            series.name = name;
+                            series.columns.template.tooltipText = "{name}: [bold]{valueX}[/]";
+                            series.columns.template.height = am4core.percent(100);
+                            series.sequencedInterpolation = true;
+
+                            var valueLabel = series.bullets.push(new am4charts.LabelBullet());
+                            valueLabel.label.text = "{valueX}";
+                            valueLabel.label.horizontalCenter = "left";
+                            valueLabel.label.dx = 10;
+                            valueLabel.label.hideOversized = false;
+                            valueLabel.label.truncate = false;
+
+                            var categoryLabel = series.bullets.push(new am4charts.LabelBullet());
+                            categoryLabel.label.text = "{name}";
+                            categoryLabel.label.horizontalCenter = "right";
+                            categoryLabel.label.dx = -10;
+                            categoryLabel.label.fill = am4core.color("#fff");
+                            categoryLabel.label.hideOversized = false;
+                            categoryLabel.label.truncate = false;
+                        }
+
+                        createSeries("tickets", "Tickets");
+                        createSeries("developers", "Devs");
+
+                    }); // end am4core.ready()
+
+
+                },
+                failure: function(result) {
+                    alert(result.d);
+                },
+                error: function(result) {
+                    alert(result.d);
+                }
+            });
+        </script>
+
+        <!-- *** End AM Charts *** -->
+        @* Morris Donut Chart *@
+        <script src="//cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.min.js"></script>
+        <script>
+
+            var morrisDonutData = [{
+                label: "Low",
+                value: @Model.Tickets!.Where(t=>t.TicketPriority!.Name == nameof(PoisonTicketPriorities.Low)).Count()
+                                                                                                        }, {
+                label: "Medium",
+                value: @Model.Tickets!.Where(t=>t.TicketPriority!.Name == nameof(PoisonTicketPriorities.Medium)).Count()
+                                                                                                        }, {
+                label: "High",
+                value: @Model.Tickets!.Where(t=>t.TicketPriority!.Name == nameof(PoisonTicketPriorities.High)).Count()
+                                                                                                        }, {
+                label: "Urgent",
+                value: @Model.Tickets!.Where(t=>t.TicketPriority!.Name == nameof(PoisonTicketPriorities.Urgent)).Count()
+                                                                                                        }];
+
+
+            /*
+            Morris: Donut
+            */
+            if ($('#morrisTicketPriority').get(0)) {
+                var donutChart = Morris.Donut({
+                    resize: true,
+                    element: 'morrisTicketPriority',
+                    data: morrisDonutData,
+                    colors: ['#0088cc', '#734ba9', '#E36159', '#ff993b']
+                });
+
+                donutChart.options.data.forEach(function(label, i) {
+                    var legendItem = $('<span></span>').text(label['label'] + ": " + label['value']).prepend('<span>&nbsp;</span>');
+                    legendItem.find('span')
+                        .css('backgroundColor', donutChart.options.colors[i])
+                        .css('width', '20px')
+                        .css('display', 'inline-block')
+                        .css('margin', '10px');
+                    $('#legend').append(legendItem)
+                });
+            };
+        </script>
+
+    //await Html.RenderPartialAsync("_ValidationScriptsPartial");
+
     }

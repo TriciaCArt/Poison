@@ -16,7 +16,7 @@ namespace Poison.Services.Interfaces
 
         public Task<Ticket> GetTicketByIdAsync(int ticketId);
 
-        public Task<Ticket> GetTicketAsNoTrackingAsync(int ticketId);
+        public Task<Ticket?> GetTicketAsNoTrackingAsync(int ticketId);
 
         public Task<List<Ticket>> GetTicketByUserIdAync(string userId, int compId);
         public Task<List<Ticket>> GetUnassignedTicketsAsync(int companyId);
