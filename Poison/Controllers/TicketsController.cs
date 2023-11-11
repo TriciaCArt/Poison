@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.CodeAnalysis;
@@ -184,19 +185,22 @@ namespace Poison.Controllers
             return View(tickets);
         }
 
+        [Authorize(Roles="Admin,ProjectManager")]
         public async Task<IActionResult> UnassignedTickets(int companyId)
         {
             int userId = User.Identity!.GetCompanyId();
 
-            if (companyId == null)
-            {
-                return NotFound();
-            }
+            //if (companyId == null)
+            //{
+            //    return NotFound();
+            //}
 
 
-            List<Ticket> tickets = await _ticketService.GetUnassignedTicketsAsync(companyId);
+            List<Ticket> tickets = await _ticketService.GetUnassignedTicketsAsync(userId);
 
             return View(tickets);
+
+
         }
 
         // GET: Tickets/Details/5
@@ -233,9 +237,10 @@ namespace Poison.Controllers
             }
 
 
-            ViewData["TicketPriorityId"] = new SelectList(_context.TicketPriorities, "Id", "Name");
+            ViewData["TicketPriorityId"] = new SelectList(await _lookupService.GetTicketPrioritiesAsync(), "Id", "Name");
 
-            ViewData["TicketTypeId"] = new SelectList(_context.TicketTypes, "Id", "Name");
+            ViewData["TicketTypeId"] = new SelectList(await _lookupService.GetTicketTypesAsync(), "Id", "Name");
+
             return View();
         }
 
@@ -259,12 +264,12 @@ namespace Poison.Controllers
                 await _ticketService.AddNewTicketAsync(ticket);
 
                 Ticket newTicket = await _ticketService.GetTicketAsNoTrackingAsync(ticket.Id);
-                await _ticketHistory.AddHistoryAsync(null!, newTicket, ticket.SubmitterUserId);
+                await _ticketHistory.AddHistoryAsync(null!, newTicket!, ticket.SubmitterUserId);
 
                 //TODO: Add something else, I don't know what.
 
 
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(AllTickets));
             }
 
             int companyId = User.Identity!.GetCompanyId();
@@ -301,11 +306,9 @@ namespace Poison.Controllers
                 return NotFound();
             }
 
-
-
-            ViewData["TicketPriorityId"] = new SelectList(_context.TicketPriorities, "Id", "Name", ticket.TicketPriorityId);
-            ViewData["TicketStatusId"] = new SelectList(_context.TicketStatuses, "Id", "Name", ticket.TicketStatusId);
-            ViewData["TicketTypeId"] = new SelectList(_context.TicketTypes, "Id", "Name", ticket.TicketTypeId);
+            ViewData["TicketPriorityId"] = new SelectList(await _lookupService.GetTicketPrioritiesAsync(), "Id", "Name", ticket.TicketPriorityId);
+            ViewData["TicketStatusId"] = new SelectList(await _lookupService.GetTicketStatusesAsync(), "Id", "Name", ticket.TicketStatusId);
+            ViewData["TicketTypeId"] = new SelectList(await _lookupService.GetTicketTypesAsync(), "Id", "Name", ticket.TicketTypeId);
             return View(ticket);
         }
 
@@ -321,13 +324,17 @@ namespace Poison.Controllers
                 return NotFound();
             }
 
+            //ModelState.Remove("SubmitterUserId");
+
             if (ModelState.IsValid)
             {
-                string userId = _userManager.GetUserId(User);
-                Ticket oldTicket = await _ticketService.GetTicketAsNoTrackingAsync(ticket.Id);
+                string userId = _userManager.GetUserId(User);                
+
+                Ticket? oldTicket = await _ticketService.GetTicketAsNoTrackingAsync(ticket.Id);
 
                 try
                 {
+                    //ticket.SubmitterUserId = _userManager.GetUserId(User);
                     ticket.Created = DateTime.SpecifyKind(ticket.Created, DateTimeKind.Utc);
                     ticket.Updated = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
 
@@ -336,7 +343,7 @@ namespace Poison.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!TicketExists(ticket.Id))
+                    if (!await TicketExists(ticket.Id))
                     {
                         return NotFound();
                     }
@@ -346,13 +353,11 @@ namespace Poison.Controllers
                     }
                 }
 
-                Ticket newTicket = await _ticketService.GetTicketAsNoTrackingAsync(ticket.Id);
-                await _ticketHistory.AddHistoryAsync(oldTicket, newTicket, userId);
+                Ticket? newTicket = await _ticketService.GetTicketAsNoTrackingAsync(ticket.Id);
+                await _ticketHistory.AddHistoryAsync(oldTicket!, newTicket!, userId);
 
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(AllTickets));
             }
-
-
 
             ViewData["TicketPriorityId"] = new SelectList(_context.TicketPriorities, "Id", "Name", ticket.TicketPriorityId);
             ViewData["TicketStatusId"] = new SelectList(_context.TicketStatuses, "Id", "Name", ticket.TicketStatusId);
@@ -406,9 +411,13 @@ namespace Poison.Controllers
             return RedirectToAction(nameof(AllTickets));
         }
 
-        private bool TicketExists(int id)
+        private async Task<bool> TicketExists(int id)
         {
-            return (_context.Tickets?.Any(e => e.Id == id)).GetValueOrDefault();
+            int companyId = User.Identity!.GetCompanyId();
+
+            return (await _ticketService.GetAllTicketsByCompanyIdAsync(companyId)).Any(t=>t.Id == id);
+
+            //return (_context.Tickets?.Any(e => e.Id == id)).GetValueOrDefault();
         }
 
         [HttpGet]

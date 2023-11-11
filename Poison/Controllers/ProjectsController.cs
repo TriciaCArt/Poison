@@ -323,7 +323,7 @@ namespace Poison.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(AllProjects));
             }
 
             int companyId = User.Identity!.GetCompanyId();

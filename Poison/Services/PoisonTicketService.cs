@@ -163,24 +163,38 @@ namespace Poison.Services
 
         public async Task<List<Ticket>> GetUnassignedTicketsAsync(int companyId)
         {
-            List<Ticket> result = new();
             List<Ticket> tickets = new();
 
             try
             {
-                tickets = await _context.Tickets.Include(t => t.Project).Where(t => t.DeveloperUserId == null).ToListAsync();
+                tickets = (await GetAllTicketsByCompanyIdAsync(companyId)).Where(t=> string.IsNullOrEmpty(t.DeveloperUserId)).ToList();
+                return tickets;
 
-                foreach (Ticket ticket in tickets)
-                {
-                    result.Add(ticket);
-                }
             }
             catch (Exception)
             {
 
                 throw;
             }
-            return result;
+
+            //List<Ticket> result = new();
+            //List<Ticket> tickets = new();
+
+            //try
+            //{
+            //    tickets = await _context.Tickets.Include(t => t.Project).Where(t => t.DeveloperUserId == null).ToListAsync();
+
+            //    foreach (Ticket ticket in tickets)
+            //    {
+            //        result.Add(ticket);
+            //    }
+            //}
+            //catch (Exception)
+            //{
+
+            //    throw;
+            //}
+            //return result;
         }
 
         public async Task<List<Ticket>> GetTicketByUserIdAync(string userId, int compId)

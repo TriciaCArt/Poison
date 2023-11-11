@@ -28,18 +28,18 @@
 <h1>Dashboard</h1>
 <a href="javascript:void(0);">
     @* User Info *@
-    [Code: Copy from Ticket/Details]
+    
 </a>
 @* Get The btUser FullName *@
 <strong>@btUser.FullName</strong>
-<span class="text-muted" style="font-size:x-small;">
+<span style="font-size:large;">
     @* Company Name *@
     <strong>@btUser.Company.Name</strong>
 </span>
 
 
 
-    <div classxfont-weighteighteightgetainer-fluid">
+<div class="container-fluid" style="font-weight:8;">
 
         <!-- Info Pills -->
         <div class="row mt-2">
@@ -101,14 +101,14 @@
                     <div class="card col m-1 p-2">
                         <div class="card-body">
                             <h5>Projects by Priority</h5>
-                            <p>[Google Charts]</p>
+                            
                             <div id="chart3D"></div>
                         </div>
                     </div>
                     <div class="card col m-1 p-2">
                         <div class="card-body">
                             <h5>Project Tickets Count (%)</h5>
-                            <p>[Google Charts]</p>
+                            
                             <div id="donut"></div>
                         </div>
                     </div>
@@ -123,12 +123,12 @@
                             <div class="chart chart-md" id="morrisTicketPriority"></div>
                         </div>
                     </div>
-                    <div class="card col m-1 p-2">
+                    @* <div class="card col m-1 p-2">
                         <div class="card-body">
                             <h5>Chart 4</h5>
                             <p>[Tickets]</p>
                         </div>
-                    </div>
+                    </div> *@
                 </div>
             </div>
         </div>
@@ -137,7 +137,7 @@
                 <div class="card col m-1 p-2">
                     <div class="card-body" style="height:600px">
                         <h5>Project: Tickets vs Developers</h5>
-                        <p>[amCharts]</p>
+                        
                         <!-- HTML -->
                         <div id="chartdiv"></div>
                     </div>
@@ -162,45 +162,50 @@
                                     <thead class="">
                                         <tr>
                                             @* Table header *@
-                                            <th>Title</th>
-                                            <th>Developer</th>
-                                            <th>Status</th>
+                                            <th>Project Title</th>
+                                            <th>Description</th>
+                                            <th>Start Date</th>
+                                            <th>End Date</th>
                                             <th>Priority</th>
-                                            <th>Date</th>
-                                            <th>Action</th>
+                                            <th>ADMIN Assigned</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @* Table body *@
-                                        @foreach (var ticket in Model.Tickets!.OrderByDescending(d => d.Created))
+                                        @foreach (var project in Model.Projects!.OrderByDescending(d => d.Created))
                                         {
                                             <tr>
-                                                <td><a asp-action="Details" asp-controller="Tickets" asp-route-id="@ticket.Id" style="color:black"><strong>@ticket.Title</strong></a> </td>
+                                                <td><a asp-action="Details" asp-controller="Projects" asp-route-id="@project.Id" style="color:black"><strong>@project.Name</strong></a> </td>
                                                 <td>
-                                                    @if (ticket.DeveloperUserId != null)
-                                                    {
-                                                        @ticket.DeveloperUser?.FullName
-                                                    }
-                                                    else
-                                                    {
-                                                        if (User.IsInRole(nameof(PoisonRoles.Admin)) || User.IsInRole(nameof(PoisonRoles.ProjectManager)))
-                                                        {
-                                                            <a class="btn btn-xs btn-info" asp-action="AssignDeveloper" asp-controller="Tickets" asp-route-ticketId="@ticket.Id">Assign Dev</a>
-                                                        }
-                                                    }
+                                                   <span class="text-center">@project.Description</span>
                                                 </td>
-                                                @if (ticket.TicketStatus.Name == "New")
+                                                <td>@project.Created.ToString("MM-dd-yyyy")</td>
+                                                <td>@project.EndDate.ToString("MM-dd-yyyy")</td>
+
+                                                @if (project.Name == "New")
                                                 {
-                                                    <td><span class="badge-success">@ticket.TicketStatus.Name </span></td>
+                                                    <td><span class="badge-success">@project.ProjectPriority.Name </span></td>
                                                 }
                                                 else
                                                 {
-                                                    <td><span class="badge-primary">@ticket.TicketStatus.Name </span></td>
+                                                    <td><span class="badge-primary">@project.ProjectPriority.Name </span></td>
                                                 }
-                                                <td><span class="badg">@ticket.TicketPriority.Name </span></td>
-                                                <td>@ticket.Created.ToString("MM-dd-yyyy")</td>
+
+                                            @if (User.IsInRole(nameof(PoisonRoles.ProjectManager)))
+                                            {
                                                 <td>
-                                                    <a class="btn btn-sm btn-outline-info" asp-action="Details" asp-controller="Tickets" asp-route-id="@ticket.Id"><i class="fs-5 bi-justify"></i></a>
+                                                    <a class="btn btn-sm btn-outline-success" asp-action="AssignProjectMembers" asp-controller="Projects" asp-route-id="@project.Id">Assign Project Members</a>
+                                                </td>
+
+                                            } else
+                                            {
+                                                <td>
+                                                    <a class="btn btn-sm btn-outline-success" asp-action="UassignedProjects" asp-controller="Projects" asp-route-id="@project.Id">Assign Projects</a>
+                                                </td>
+                                            }                   
+                                                
+                                                <td>
+                                                    <a class="btn btn-sm btn-outline-info" asp-action="Details" asp-controller="Projects" asp-route-id="@project.Id"><i class="fs-5 bi-justify">Details</i></a>
                                                 </td>
                                             </tr>
                                         }
@@ -265,7 +270,7 @@
                                                 <td><span class="badg">@ticket.TicketPriority!.Name </span></td>
                                                 <td>@ticket.Created.ToString("MM-dd-yyyy")</td>
                                                 <td>
-                                                    <a class="btn btn-sm btn-outline-info" asp-action="Details" asp-controller="Tickets" asp-route-id="@ticket.Id"><i class="fs-5 bi-justify"></i></a>
+                                                    <a class="btn btn-sm btn-outline-info" asp-action="Details" asp-controller="Tickets" asp-route-id="@ticket.Id"><i class="fs-5 bi-justify">Details</i></a>
                                                 </td>
                                             </tr>
                                         }

@@ -37,7 +37,7 @@
                         {
                             if (User.IsInRole(nameof(PoisonRoles.Admin)) || User.IsInRole(nameof(PoisonRoles.ProjectManager)))
                             {
-                                <a class="btn btn-xs btn-info" asp-action="AssignDeveloper" asp-controller="Tickets" asp-route-id="@ticket.Id">Assign Dev</a>
+                                <a class="btn btn-xs btn-info" asp-action="AssignDeveloper" asp-controller="Tickets" asp-route-ticketid="@ticket.Id">Assign Dev</a>
                             }
                         }
                     </td>
@@ -52,7 +52,7 @@
                     <td><span class="badg">@ticket.TicketPriority!.Name </span></td>
                     <td>@ticket.Created.ToString("MM-dd-yyyy")</td>
                     <td>
-                        <a class="btn btn-sm btn-outline-info" asp-action="Details" asp-controller="Tickets" asp-route-id="@ticket.Id"><i class="fs-5 bi-justify"></i></a>
+                        <a class="btn btn-sm btn-outline-info" asp-action="Details" asp-controller="Tickets" asp-route-id="@ticket.Id"><i class="fs-5 bi-justify"></i>Details</a>
                     </td>
                 </tr>
             }

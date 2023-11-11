@@ -7,12 +7,10 @@
 <h1>All Tickets</h1>
 
 <div class="table-responsive">
-    <table class="table table-hover table-striped table-bordered">
+    <table class="table table-hover table-bordered">
         <thead>
             <tr>
-                <th class="text-center" scope="col">
-                    @Html.DisplayNameFor(model => model.Title)
-                </th>
+                <th class="text-center" scope="col">@Html.DisplayNameFor(model => model.Title)</th>
                 <th class="text-center" scope="col">
                     @Html.DisplayNameFor(model => model.Description)
                 </th>
@@ -64,13 +62,19 @@
                         @Html.DisplayFor(modelItem => item.SubmitterUser.FullName)
                     </td>
                     <td class="text-center">
+                       @* @if(model.DeveloperUser.FullName == null){
+                            <button class="btn btn-light-success" asp-action="AssignDeveloper">Assign Developer</button>
+                        }else {
+                            
+                        }*@
                         @Html.DisplayFor(modelItem => item.DeveloperUser.FullName)
+                        
                     </td>
                     <td>
-                        <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                        <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                        <a asp-action="Archive" asp-route-id="@item.Id">Archive</a>
-                        <a asp-action="UnassignedTickets" asp-route-id="@item.Id">Unassigned Tickets</a>
+                        <a class="btn-light-primary" asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                        <a class="btn-light-secondary" asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                        <a class="btn-light-danger" asp-action="Archive" asp-route-id="@item.Id">Archive</a>
+                        <a class="btn-light-warning" asp-action="UnassignedTickets" asp-route-id="@item.Id">Unassigned Tickets</a>
                     </td>
                 </tr>
             }
